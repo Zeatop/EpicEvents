@@ -4,7 +4,7 @@ from peewee import *
 import jwt
 import bcrypt
 
-db = SqliteDatabase('EpicEvents .db')
+db = SqliteDatabase('EpicEvents.db')
 
 class Permissions(Enum):
 
