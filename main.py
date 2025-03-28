@@ -1,3 +1,3 @@
-from db import *
+from controller import *
 
-db_startup()
+DBController.db_startup()

@@ -57,6 +57,20 @@ class User(Model):
         user = cls.create(name=name, mail=mail, phone=phone, password=hashed_password, role=role)
         return user
 
+class Client(Model):
+    name = CharField()
+    mail = CharField()
+    phone = CharField()
+
+    class Meta:
+        database = db
+    
+    @classmethod
+    def create_client(cls, name, mail, phone):
+        user = cls.create(name=name, mail=mail, phone=phone)
+        return user
+
+
 class Token(Model):
     encoded_token = CharField()
     created_at = DateTimeField(default=datetime.datetime.now)
@@ -119,11 +133,9 @@ class Session(Model):
     def create_session(cls, user):
         encoded_token = Token.generate_token(user.mail)
         token_object = Token.get(Token.encoded_token == encoded_token)
-        expires_at = datetime.datetime.now() + datetime.timedelta(days=1)
         session = cls.create(
             user=user,
             token=token_object,
-            expires_at=expires_at
         )
         return session
         
@@ -160,9 +172,8 @@ class Session(Model):
         except:
             return None
 
-
 class Contract(Model):
-    client = ForeignKeyField(User, backref='contracts')
+    client = ForeignKeyField(Client, backref='contracts')
     commercial = ForeignKeyField(User, backref='contracts')
     total_amount = DecimalField()
     rest_amount = DecimalField()
@@ -171,6 +182,12 @@ class Contract(Model):
 
     class Meta:
         database = db
+
+    @classmethod
+    def create_contract(cls, client, commercial, total_amount, rest_amount, state):
+        contract = cls.create(client=client, commercial=commercial, total_amount=total_amount,
+                   rest_amount=rest_amount, state=state)
+        return contract
 
 class Event(Model):
     contract = ForeignKeyField(Contract, backref='events')
@@ -184,3 +201,9 @@ class Event(Model):
 
     class Meta:
         database = db
+    
+    @classmethod
+    def create_event(cls, contract, client, event_start, event_end, logistic_contact, location, attendees, notes):
+        event = cls.create(contract=contract, client=client, event_start=event_start, event_end=event_end,
+                   logistic_contact=logistic_contact,location=location, attendees=attendees, notes=notes)
+        return event

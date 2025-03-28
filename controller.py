@@ -2,38 +2,33 @@ import views
 from models import *
 import jwt
 
-class Controller():
+class DBController():
+    def db_startup():
+        if User.get(User.name=="root"):
+            db.connect()
+        else:
+            db.connect()
+            db.create_tables([User, Contract, Event])
+            User.create_user("root", "root@root.com", "rootphone", "root", UserRole.MANAGEMENT.value)
 
-    class SessionController():     
-        @staticmethod
-        def create_account(user_infos:dict):
-            User(user_infos["name"], user_infos["mail"], user_infos["phone"],
-                 user_infos["password"], user_infos["role"])
+class SessionController():
 
-        @staticmethod
-        def start_session():
-            data = views.Views.Connection()
-            mail = data["mail"]
-            password = data["password"]
-            user = User.get(User.mail==mail)
-            checked_pswd = Security.verify_password(password, user.password)
-            if checked_pswd:
-                Controller.TokenController.generate_token(mail)
-                return checked_pswd
-            else:
-                print("Votre mail ou mot de passe est erroné, veuillez retenter.")
-                Controller.start_session()
-        
-        @staticmethod
-        def retrieve_session():
-            token = Controller.TokenController.get_local_token()
-            if token:
-                token = Controller.TokenController.decode_token(token)
-                exp = token["exp"]
-                now = datetime.datetime.now()
-                if exp < now:
-                    print("token expiré, veuillez vous connecter à nouveau")
-                else:
-                    Controller.SessionController.start_session()
-            else:
-                Controller.SessionController.start_session()
+    @staticmethod
+    def create_account():
+        user_infos = views.Views.create_user()
+        user = User.create_user(user_infos)
+        return user
+
+    @staticmethod
+    def login():
+        user_infos = views.Views.connection()
+        user = User.get(User.mail == user_infos["mail"])
+        is_session_active = Session.get_user_active_session(user)
+        if is_session_active:
+            pass
+        else:
+            session = Session.create_session(user)
+        return session
+    
+
+
