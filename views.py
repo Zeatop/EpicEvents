@@ -20,13 +20,13 @@ class Views():
         phone = input ("Numéro de téléphone: ")
         password = input("Mot de passe:")
         role = input("Role: SUPPORT (1) - COMMERCIAL (2) - Management (3)")
-
-
         return {"name":name,
                 "mail":mail,
                 "phone":phone,
                 "password":password,
-                "role":int(role)}
+                "role":int(role)
+                }
+    
     @staticmethod
     def remind_me():
         remind = input ("Souhaitez-vous enregistrer votre session pour la prochaine connexion ? \n  - Oui (tapez 1)\n  - Non (tapez 2)")
