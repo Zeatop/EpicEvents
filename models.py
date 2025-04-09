@@ -3,6 +3,7 @@ import datetime
 from peewee import *
 import jwt
 import bcrypt
+import os
 
 db = SqliteDatabase('EpicEvents.db')
 SECRET_KEY = "clé_secrète"
@@ -15,7 +16,6 @@ class Permissions(Enum):
 
 class UserRole (Enum):
     
-    CUSTOMER = "customer"
     SUPPORT = "support"
     COMMERCIAL = "commercial"
     MANAGEMENT = "Management"
@@ -24,14 +24,14 @@ class Security():
     def hash_password(password):
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
-        return hashed_password
+        return hashed_password.decode('utf-8')
 
     def verify_password(password, hashed_password):
-        return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+        return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 class User(Model):
     name = CharField()
-    mail = CharField()
+    mail = CharField(unique=True)
     phone = CharField()
     password = CharField()
     role = CharField(choices=((r.value, r.name) for r in UserRole))
@@ -42,8 +42,6 @@ class User(Model):
     @property
     def get_permission(self):
         match self.role:
-            case UserRole.CUSTOMER.value:
-                return None
             case UserRole.SUPPORT.value:
                 return Permissions.LOGISTIC_TEAM
             case UserRole.COMMERCIAL.value:
@@ -52,9 +50,11 @@ class User(Model):
                 return Permissions.MANAGEMENT_TEAM
         
     @classmethod
-    def create_user(cls, name, mail, phone, password, role):
-        hashed_password = Security.hash_password(password)
-        user = cls.create(name=name, mail=mail, phone=phone, password=hashed_password, role=role)
+    def create_user(cls, account_infos:dict):
+        hashed_password = Security.hash_password(account_infos["password"])
+        user = cls.create(name=account_infos["name"], mail=account_infos["mail"],
+                          phone=account_infos["phone"], password=hashed_password,
+                          role=account_infos["role"])
         return user
 
 class Client(Model):
@@ -70,15 +70,7 @@ class Client(Model):
         user = cls.create(name=name, mail=mail, phone=phone)
         return user
 
-
 class Token(Model):
-    encoded_token = CharField()
-    created_at = DateTimeField(default=datetime.datetime.now)
-    expires_at = DateTimeField()
-
-    class Meta:
-        database = db
-
 
     @classmethod
     def generate_token(cls, mail):
@@ -88,11 +80,21 @@ class Token(Model):
             "exp":expiration.timestamp()
         }
         encoded_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-        token = cls.create(
-            encoded_token = encoded_token,
-            expires_at = expiration)
-        
         return encoded_token
+    
+    @staticmethod
+    def store_token(token):
+            with open('.token', 'w') as f:
+                f.write(f'{token}')
+        
+    @staticmethod
+    def get_local_token():
+            try:
+                with open('.token', 'r') as f:
+                    token = f.read()
+                    return token
+            except Exception as e:
+                print(f"Token non trouvé en local : {e}")
 
     @staticmethod
     def decode_token(token, secret_key):
@@ -107,11 +109,12 @@ class Token(Model):
             return None
 
     @classmethod
-    def is_valid(cls, token_string):
+    def is_valid(cls, payload):
         # Vérifier si le token existe en base et n'est pas expiré
         try:
-            token = cls.get(cls.encoded_token == token_string)
-            return datetime.datetime.now() < token.expires_at
+            expiration = payload['exp']
+            current_timestamp = datetime.datetime.now().timestamp()
+            return  current_timestamp < expiration
         except cls.DoesNotExist:
             return False
 
@@ -119,58 +122,16 @@ class Token(Model):
     def get_permissions(payload):
         user = User.get(User.mail == payload["mail"])
         return user.role
-
-class Session(Model):
-    user =  ForeignKeyField(User, backref='sessions')
-    token = ForeignKeyField(Token, backref='sessions')
-    created_at = DateTimeField(default=datetime.datetime.now)
-    expires_at = DateTimeField(default=(datetime.datetime.now() + datetime.timedelta(days=1)))
-
-    class Meta:
-        database = db
-
-    @classmethod
-    def create_session(cls, user):
-        encoded_token = Token.generate_token(user.mail)
-        token_object = Token.get(Token.encoded_token == encoded_token)
-        session = cls.create(
-            user=user,
-            token=token_object,
-        )
-        return session
-        
-    def is_valid(self):
-        return datetime.datetime.now() < self.expires_at
     
-    @classmethod
-    def get_active_session(cls, encoded_token):
-        try: 
-            token = cls.get(cls.encoded_token == encoded_token)
-        except Token.DoesNotExist:
-            return None
-        decoded = Token.decode_token(token, SECRET_KEY)
-        if not decoded:
-            return None
-        # Cherchez la session correspondante en BDD
+    @staticmethod
+    def delete_local_token():
         try:
-            session = cls.get(cls.encoded_token == token)
-            if session.is_valid():
-                return session
-            return None
-        except cls.DoesNotExist:
-            return None
-        
-    @classmethod
-    def get_user_active_session(cls, user):
-        current_time = datetime.datetime.now()
-        try:
-            # Jointure avec Token pour vérifier l'expiration
-            return cls.select().join(Token).where(
-                (cls.user == user) & 
-                (Token.expires_at > current_time)
-            ).order_by(cls.created_at.desc()).first()
-        except:
-            return None
+            os.remove('.token')
+            print("Token local supprimé.")
+        except FileNotFoundError:
+            print("Aucun token local à supprimer.")
+        except Exception as e:
+            print(f"Erreur lors de la suppression du token local : {e}")
 
 class Contract(Model):
     client = ForeignKeyField(Client, backref='contracts')
