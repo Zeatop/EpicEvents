@@ -26,17 +26,6 @@ class DBController():
 class Controller():
 
     @staticmethod
-    def create_account():
-        user_infos = views.Views.create_user()
-        try:
-            print(f"Création de l'utilisateur {user_infos['mail']} en cours...")
-            user = User.create_user(user_infos)
-            print(f"Création de l'utilisateur {user_infos['mail']} réussie !")
-            return user
-        except Exception as e:
-            print(f"Erreur lors de la création de l'utilisateur: {e}")
-
-    @staticmethod
     def login():
         token = Token.get_local_token()
         if token:
@@ -70,6 +59,14 @@ class Controller():
     @staticmethod
     def create_account(user:User):
         account_infos = views.Views.create_user()
+        match account_infos["role"]:
+            case 1:
+                account_infos["role"] = UserRole.SUPPORT
+            case 2:
+                account_infos["role"] = UserRole.COMMERCIAL
+            case 3:
+                account_infos["role"] = UserRole.MANAGEMENT
+                
         if user.get_permission() == Permissions.MANAGEMENT_TEAM:
             try:
                 User.create_user(account_infos)

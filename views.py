@@ -10,12 +10,6 @@ class Views():
         return {"mail":mail,
                 "password":password
                 }
-    
-    @staticmethod
-    def home(user:User):
-        match user.get_permission():
-            case x:
-                pass
 
     
     @staticmethod
@@ -32,7 +26,7 @@ class Views():
                 "mail":mail,
                 "phone":phone,
                 "password":password,
-                "role":role}
+                "role":int(role)}
     @staticmethod
     def remind_me():
         remind = input ("Souhaitez-vous enregistrer votre session pour la prochaine connexion ? \n  - Oui (tapez 1)\n  - Non (tapez 2)")
