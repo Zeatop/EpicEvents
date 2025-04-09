@@ -66,9 +66,17 @@ class Client(Model):
         database = db
     
     @classmethod
-    def create_client(cls, name, mail, phone):
-        user = cls.create(name=name, mail=mail, phone=phone)
+    def create_client(cls, client_infos:dict):
+        user = cls.create(name=["name"], mail=["mail"], phone=["phone"])
         return user
+    
+    def update_phone(self, phone):
+        self.phone = phone
+        self.save()
+    
+    def update_mail(self, mail):
+        self.phone = mail
+        self.save()
 
 class Token(Model):
 
@@ -145,14 +153,23 @@ class Contract(Model):
         database = db
 
     @classmethod
-    def create_contract(cls, client, commercial, total_amount, rest_amount, state):
-        contract = cls.create(client=client, commercial=commercial, total_amount=total_amount,
-                   rest_amount=rest_amount, state=state)
+    def create_contract(cls, contract_dict:dict):
+        contract = cls.create(client=contract_dict["client"], commercial=contract_dict["commercial"], total_amount=contract_dict["total_amount"],
+                   rest_amount=contract_dict["rest_amount"], state=contract_dict["state"])
         return contract
+    
+    def update_contract_state(self, state):
+        self.state = state
+        self.save()
+    
+    def update_rest_amount(self, amount):
+        self.rest_amount = self.rest_amount - amount
+        self.save()   
 
 class Event(Model):
     contract = ForeignKeyField(Contract, backref='events')
     client = ForeignKeyField(User, backref='events')
+    name = CharField(unique=True)
     event_start = DateTimeField()
     event_end = DateTimeField()
     logistic_contact = ForeignKeyField(User, backref='events')
@@ -164,7 +181,10 @@ class Event(Model):
         database = db
     
     @classmethod
-    def create_event(cls, contract, client, event_start, event_end, logistic_contact, location, attendees, notes):
-        event = cls.create(contract=contract, client=client, event_start=event_start, event_end=event_end,
-                   logistic_contact=logistic_contact,location=location, attendees=attendees, notes=notes)
+    def create_event(cls, contract_infos:dict):
+        event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
+                   logistic_contact=contract_infos["logistic_contact"],location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
         return event
+    
+    def add_support(self, logistic_contact:User):
+        self.logistic_contact = logistic_contact
