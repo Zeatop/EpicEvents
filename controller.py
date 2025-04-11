@@ -84,12 +84,13 @@ class Controller():
                 if choice == 1:
                     Controller.create_account(user)
                 elif choice == 2:
-                    pass
+                    Event_Contract_Controller.create_contract(user)
                 elif choice == 3:
-                    pass
+                    Event_Contract_Controller.update_contract(user)
                 elif choice == 4:
-                    pass
+                    Event_Contract_Controller.update_event(user)
                 elif choice == 5:
+                    #TODO
                     pass
                 elif choice == 6:
                     remind = views.Views.remind_me()
@@ -104,13 +105,14 @@ class Controller():
                 if choice == 1:
                     Controller.create_account(user)
                 elif choice == 2:
-                    pass
+                    ClientController.update_client(user)
                 elif choice == 3:
-                    pass
+                    Event_Contract_Controller.update_contract(user)
                 elif choice == 4:
+                    #TODO
                     pass
                 elif choice == 5:
-                    pass
+                    Event_Contract_Controller.create_event(user)
                 elif choice == 6:
                     pass
                 elif choice == 7:
@@ -124,7 +126,8 @@ class Controller():
 
             case "support":
                 if choice == 1:
-                    Controller.create_account(user)
+                    #TODO
+                    pass
                 elif choice == 2:
                     pass
                 elif choice == 3:
@@ -150,15 +153,17 @@ class ClientController():
         else:
             print("Il faut être dans l'équipe commerciale pour créer un client.")
     
-    def update_client(user:User, client:Client, choice):
+    def update_client(user:User):
         if user.get_permission == Permissions.COMMERCIAL_TEAM:
+            choice = views.Views.select_client_update()
+            client = views.Views.select_client()
             match choice:
                 case 1:
                     new_phone = views.Views.update_client_phone()
                     client.update_phone(new_phone)
                 case 2:
                     new_mail = views.Views.update_client_mail()
-                    client.update_phone(new_mail)
+                    client.update_mail(new_mail)
         else:
             print("Il faut être dans l'équipe commerciale pour mettre à jour un client.")
 
@@ -169,20 +174,22 @@ class Event_Contract_Controller():
         contract_infos = views.Views.create_contract()
         if user.get_permission == Permissions.MANAGEMENT_TEAM:
             try:
-                Event.create_event(contract_infos)
+                Contract.create_contract(contract_infos)
                 print(f"Création du {contract_infos['name'].value} réussie !")
             except Exception as e:
                 print(f"Une erreur est survenue lors de la création de l'évènement : {e}")
         else:
             print("Il faut être dans l'équipe commerciale pour créer un évènement.")
 
-    def update_contract(user:User, contract:Contract, choice):
-        if user.get_permission == Permissions.COMMERCIAL_TEAM:
-            match choice:
-                case 1:
+    def update_contract(user:User):
+        if user.get_permission == Permissions.COMMERCIAL_TEAM or user.get_permission == Permissions.MANAGEMENT_TEAM :
+            contract = views.Views.select_contract()
+            match user.get_permission:
+                case Permissions.MANAGEMENT_TEAM:
                     new_state = views.Views.update_contract_state()
                     contract.update_contract_state(new_state)
-                case 2:
+                case Permissions.COMMERCIAL_TEAM:
+                    #TODO Rajouter condition du client que le commercial a créé
                     amount = views.Views.update_rest_amount()
                     contract.update_rest_amount(amount)
         else:
@@ -199,11 +206,12 @@ class Event_Contract_Controller():
         else:
             print("Il faut être dans l'équipe commerciale pour créer un évènement.")
     
-    def update_event(user:User, event:Event):
-        if user.get_permission == Permissions.COMMERCIAL_TEAM:
+    def update_event(user:User):
+        if user.get_permission == Permissions.MANAGEMENT_TEAM:
+            event = views.Views.select_event()
             logistic_contact = views.Views.add_support()
             event.add_support(logistic_contact)
         else:
-            print("Il faut être dans l'équipe commerciale pour mettre à jour un client.")
+            print("Il faut être dans l'équipe de gestion pour mettre à jour un client.")
     
 

@@ -38,6 +38,9 @@ class User(Model):
 
     class Meta:
         database = db
+    
+    def __str__(self):
+        return self.name
 
     @property
     def get_permission(self):
@@ -65,9 +68,12 @@ class Client(Model):
     class Meta:
         database = db
     
+    def __str__(self):
+        return self.name
+    
     @classmethod
     def create_client(cls, client_infos:dict):
-        user = cls.create(name=["name"], mail=["mail"], phone=["phone"])
+        user = cls.create(name=client_infos["name"], mail=client_infos["mail"], phone=client_infos["phone"])
         return user
     
     def update_phone(self, phone):
@@ -75,7 +81,7 @@ class Client(Model):
         self.save()
     
     def update_mail(self, mail):
-        self.phone = mail
+        self.mail = mail
         self.save()
 
 class Token(Model):
@@ -151,6 +157,9 @@ class Contract(Model):
 
     class Meta:
         database = db
+    
+    def __str__(self):
+        return f'Contrat n°{self.id}'
 
     @classmethod
     def create_contract(cls, contract_dict:dict):
@@ -179,6 +188,9 @@ class Event(Model):
 
     class Meta:
         database = db
+    
+    def __str__(self):
+        return self.name
     
     @classmethod
     def create_event(cls, contract_infos:dict):
