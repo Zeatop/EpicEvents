@@ -252,9 +252,8 @@ class Event_Contract_Controller():
 
     def create_contract(user:User):
         
-        contracts = Contract.select()
         clients = Client.select()
-        contract_infos = views.Views.create_contract(user, contracts, clients)
+        contract_infos = views.Views.create_contract(user, clients)
         if not contract_infos:
             return
         contract = Contract.create_contract(contract_infos)
@@ -265,6 +264,8 @@ class Event_Contract_Controller():
         
         contracts = Contract.select()
         contract = views.Views.select_contract(user, contracts)
+        if not contract:
+            return
         match user.get_permission:
             case Permissions.MANAGEMENT_TEAM:
                 new_state = views.Views.update_contract_state()

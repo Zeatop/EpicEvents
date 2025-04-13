@@ -120,15 +120,12 @@ class Views():
         return new_mail
 
     @staticmethod
-    def create_contract(user, contracts, clients):
+    def create_contract(user, clients):
 
         if user.get_permission != Permissions.MANAGEMENT_TEAM:
             print(Colors.info("Il faut être dans l'équipe gestion pour créer un contrat."))
             return None
         
-        if not contracts:
-            print(Colors.error("Il n'y a aucun client enregistré"))
-            return
 
         print(Colors.highlight("Veuillez renseigner les informations du contrat à créer"))
         
@@ -262,7 +259,7 @@ class Views():
             "name": name,
             "event_start": event_start,
             "event_end": event_end,
-            "logistic_contact": int(logistic_contact_id),
+            "logistic_contact": int(logistic_contact_id) if logistic_contact_id else None,
             "location": location,
             "attendees": int(attendees) if attendees.isdigit() else 0,
             "notes": notes if notes else None
