@@ -181,7 +181,7 @@ class Event(Model):
     name = CharField(unique=True)
     event_start = DateTimeField()
     event_end = DateTimeField()
-    logistic_contact = ForeignKeyField(User, backref='events')
+    logistic_contact = ForeignKeyField(User, backref='events', null=True)
     location = CharField()
     attendees = IntegerField()
     notes = TextField(null=True)

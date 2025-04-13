@@ -62,11 +62,11 @@ class Controller():
         account_infos = views.Views.create_user()
         match account_infos["role"]:
             case 1:
-                account_infos["role"] = UserRole.SUPPORT
+                account_infos["role"] = UserRole.SUPPORT.value
             case 2:
-                account_infos["role"] = UserRole.COMMERCIAL
+                account_infos["role"] = UserRole.COMMERCIAL.value
             case 3:
-                account_infos["role"] = UserRole.MANAGEMENT
+                account_infos["role"] = UserRole.MANAGEMENT.value
 
         if user.get_permission == Permissions.MANAGEMENT_TEAM:
             try:
@@ -78,7 +78,7 @@ class Controller():
             print("Il faut être dans l'équipe de gestion pour créer un compte.")
 
     @staticmethod
-    def action_selector(user, choice):
+    def action_selector(user:User, choice):
         match user.role:
             case "Management":
                 if choice == 1:
@@ -90,7 +90,7 @@ class Controller():
                 elif choice == 4:
                     Event_Contract_Controller.update_event(user)
                 elif choice == 5:
-                    #TODO
+                    Controller.select_data_display(user)
                     pass
                 elif choice == 6:
                     remind = views.Views.remind_me()
@@ -103,19 +103,16 @@ class Controller():
                     
             case "commercial":
                 if choice == 1:
-                    Controller.create_account(user)
+                    ClientController.create_client(user)
                 elif choice == 2:
                     ClientController.update_client(user)
                 elif choice == 3:
                     Event_Contract_Controller.update_contract(user)
                 elif choice == 4:
-                    #TODO
-                    pass
-                elif choice == 5:
                     Event_Contract_Controller.create_event(user)
+                elif choice == 5:
+                    Controller.select_data_display(user)
                 elif choice == 6:
-                    pass
-                elif choice == 7:
                     remind = views.Views.remind_me()
                     if int(remind) == 2:
                         Token.delete_local_token() 
@@ -126,11 +123,9 @@ class Controller():
 
             case "support":
                 if choice == 1:
-                    #TODO
+                    Controller.select_data_display(user)
                     pass
                 elif choice == 2:
-                    pass
-                elif choice == 3:
                     remind = views.Views.remind_me()
                     if int(remind) == 2:
                         Token.delete_local_token() 
@@ -139,12 +134,39 @@ class Controller():
                     print("Veuillez renseigner un choix valide")
                     views.Views.home_menu(user)
 
+    @staticmethod
+    def select_data_display (user:User):
+        choice = views.Views.select_data_display(user)
+        match user.role:
+            case "Management":
+                match choice:
+                    case 1:
+                        views.Views.show_all_data()
+                    case 2:
+                        views.Views.show_unsupported_events()
+
+            case "commercial":
+                match choice:
+                    case 1:
+                        views.Views.show_all_data()
+                    case 2:
+                        views.Views.show_unsigned_contracts()
+                    case 3:
+                        views.Views.show_unsigned_contracts()
+
+            case "support":
+                match choice:
+                    case 1:
+                        views.Views.show_all_data()
+                    case 2:
+                        views.Views.show_my_events(user)
+
 
 class ClientController():
 
     def create_client(user:User):
-        client_infos = views.Views.create_client()
         if user.get_permission == Permissions.COMMERCIAL_TEAM:
+            client_infos = views.Views.create_client()
             try:
                 Client.create_client(client_infos)
                 print(f"Création du client {client_infos['name'].value} réussie !")
@@ -171,8 +193,8 @@ class ClientController():
 class Event_Contract_Controller():
 
     def create_contract(user:User):
-        contract_infos = views.Views.create_contract()
         if user.get_permission == Permissions.MANAGEMENT_TEAM:
+            contract_infos = views.Views.create_contract()
             try:
                 Contract.create_contract(contract_infos)
                 print(f"Création du {contract_infos['name'].value} réussie !")
@@ -193,11 +215,11 @@ class Event_Contract_Controller():
                     amount = views.Views.update_rest_amount()
                     contract.update_rest_amount(amount)
         else:
-            print("Il faut être dans l'équipe commerciale pour mettre à jour un client.")
+            print("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un client.")
 
     def create_event(user:User):
-        event_infos = views.Views.create_event()
         if user.get_permission == Permissions.COMMERCIAL_TEAM:
+            event_infos = views.Views.create_event()
             try:
                 Event.create_event(event_infos)
                 print(f"Création de l'évènement {event_infos['name'].value} réussie !")

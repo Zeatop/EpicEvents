@@ -1,5 +1,5 @@
 from models import *
-
+from tabulate import tabulate
 
 class Views():
     
@@ -51,18 +51,17 @@ class Views():
                                 "\t- Créer un client (tapez 1)\n"
                                 "\t- Mettre à jour un client (tapez 2)\n"
                                 "\t- Mettre à jour un contrat (tapez 3)\n"
-                                "\t- Voir les contrats (tapez 4)\n"
-                                "\t- Créer un évènement (tapez 5)\n"
-                                "\t- Voir la liste des contrats et évènements (tapez 6)\n"
-                                "\t- Quitter (tapez 7)\n"
+                                "\t- Créer un évènement (tapez 4)\n"
+                                "\t- Voir la liste des contrats et évènements (tapez 5)\n"
+                                "\t- Quitter (tapez 6)\n"
                                 "\tChoix: ")
                 choice = int(home_choice)
                 return choice
 
             case "support":
                 home_choice = input("Que souhaitez-vous faire ? \n"
-                                    "\t- Regarder mes évènements (tapez 1) \n"
-                                    "\t- Voir la liste des contrats et évènements (tapez 2)\n"
+                                    "\t- Voir la liste des contrats et évènements (tapez 1)\n"
+                                    "\t- Quitter (tapez 2)\n"
                                     "\tChoix: ")
                 choice = int(home_choice)
                 return choice
@@ -153,15 +152,11 @@ class Views():
         print("\nÉtats possibles du contrat:")
         print("1 - En attente")
         print("2 - Signé")
-        print("3 - En cours")
-        print("4 - Terminé")
-        state_choice = input("Sélectionnez l'état du contrat (1-4): ")
+        state_choice = input("Sélectionnez l'état du contrat (1-2): ")
         
         states = {
             "1": "En attente",
             "2": "Signé",
-            "3": "En cours",
-            "4": "Terminé"
         }
         
         state = states.get(state_choice, "En attente")
@@ -182,7 +177,7 @@ class Views():
         print("\nListe des contrats disponibles:")
         contracts = Contract.select()
         for contract in contracts:
-            print(f"ID: {contract.id} - Client: {contract.client.name}")
+            print(f"ID: {contract.id} - Client: {contract.client.name} - Commercial {contract.commercial.name}")
         contract_id = input("Sélectionnez l'ID du contrat: ")
         
         # Le client est déjà associé au contrat, on le récupère automatiquement
@@ -348,3 +343,136 @@ class Views():
         logistic_contact_id = input("Sélectionnez l'ID du nouveau contact logistique: ")
         
         return int(logistic_contact_id)
+
+    @staticmethod
+    def select_data_display(user:User):
+        match user.role:
+            case "Management":
+                data_choice = input("Que souhaitez-vous voir ?\n"
+                               "\t- Tous les contrats et évènements (tapez 1)\n"
+                               "\t- Les évènements sans support (tapez 2)\n"
+                               "Choix: ")
+                choice = int(data_choice)
+                return choice
+
+            case "commercial":
+                data_choice = input("Que souhaitez-vous faire ?\n"
+                                "\t- Tous les contrats et évènements (tapez 1)\n"
+                                "\t- Les contrats non signés (tapez 2)\n"
+                                "\t- Les contrats non régularisés (tapez 3)\n"
+                                "\tChoix: ")
+                choice = int(data_choice)
+                return choice
+
+            case "support":
+                data_choice = input("Que souhaitez-vous voir ? \n"
+                                    "\t- Tous les contrats et évènements (tapez 1) \n"
+                                    "\t- Mes évènements attribués (tapez 2)\n"
+                                    "\tChoix: ")
+                choice = int(data_choice)
+                return choice
+ 
+    @staticmethod
+    def show_all_data():
+        events = Event.select()
+        
+        # Préparation des données pour le tableau
+        table_data = []
+        for event in events:
+            table_data.append([
+                event.name, 
+                event.contract.state, 
+                event.client.name, 
+                event.commercial.name, 
+                event.logistic_contact.name
+            ])
+        
+        # Définition des en-têtes
+        headers = ["Évènement", "Contrat", "Client", "Commercial", "Support"]
+        
+        # Affichage du tableau
+        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+
+    @staticmethod
+    def show_unsupported_events():
+        events = Event.get(Event.logistic_contact == "None")
+        
+        # Préparation des données pour le tableau
+        table_data = []
+        for event in events:
+            table_data.append([
+                event.name, 
+                event.contract.state, 
+                event.client.name, 
+                event.commercial.name, 
+                event.logistic_contact.name
+            ])
+        
+        # Définition des en-têtes
+        headers = ["Évènement", "Contrat", "Client", "Commercial", "Support"]
+        
+        # Affichage du tableau
+        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+
+    @staticmethod
+    def show_my_events(user):
+        events = Event.get(Event.logistic_contact == user)
+        
+        # Préparation des données pour le tableau
+        table_data = []
+        for event in events:
+            table_data.append([
+                event.name, 
+                event.contract.state, 
+                event.client.name, 
+                event.commercial.name, 
+                event.logistic_contact.name
+            ])
+        
+        # Définition des en-têtes
+        headers = ["Évènement", "Contrat", "Client", "Commercial", "Support"]
+        
+        # Affichage du tableau
+        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+
+    @staticmethod
+    def show_unpaid_contracts():
+        contracts = Contract.get(Contract.rest_amount != 0)
+        
+        # Préparation des données pour le tableau
+        table_data = []
+        for contract in contracts:
+            table_data.append([
+                contract.state, 
+                contract.rest_amount, 
+                contract.state, 
+                contract.client.name, 
+                contract.commercial.name
+            ])
+        
+        # Définition des en-têtes
+        headers = ["Contrat", "Reste à payer", "État", "Client", "Commercial"]
+        
+        # Affichage du tableau
+        print(tabulate(table_data, headers=headers, tablefmt="grid"))
+
+    @staticmethod
+    def show_unsigned_contracts():
+        contracts = Contract.get(Contract.state != "Signé")
+        
+        # Préparation des données pour le tableau
+        table_data = []
+        for contract in contracts:
+            table_data.append([
+                contract.state, 
+                contract.rest_amount, 
+                contract.state, 
+                contract.client.name, 
+                contract.commercial.name
+            ])
+        
+        # Définition des en-têtes
+        headers = ["Contrat", "Reste à payer", "État", "Client", "Commercial"]
+        
+        # Affichage du tableau
+        print(tabulate(table_data, headers=headers, tablefmt="grid"))
