@@ -107,12 +107,7 @@ class Views():
         print("2 - Mettre à jour l'adresse mail")
         
         choice = input("Votre choix (1 ou 2): ")
-        
-        if choice in ["1", "2"]:
-            return int(choice)
-        else:
-            print("Choix invalide. Sélection par défaut: mise à jour du numéro de téléphone.")
-            return 1
+        return int(choice)
 
     @staticmethod
     def update_client_phone():
