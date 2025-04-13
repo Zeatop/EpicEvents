@@ -84,11 +84,11 @@ class Controller():
                 return user
             else:
                 print(Colors.error("Mot de passe incorrect \nRéessayez de vous connecter"))
-                Controller.login()
-                return None
+                return Controller.login()
+                
         except User.DoesNotExist:
             print(Colors.error("Utilisateur non trouvé"))
-            exit(0)
+            return Controller.login()
         
     @staticmethod
     def handle_session_persistence(choice):
