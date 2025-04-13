@@ -1,5 +1,6 @@
 from controller import *
 
+SentryController.init_sentry()
 DBController.db_startup()
 user = Controller.login()
 while True:

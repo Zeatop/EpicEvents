@@ -1,8 +1,19 @@
 import views
 from models import *
+import sentry_sdk
 import jwt
 
 DEBUG = True
+class SentryController():
+
+    @staticmethod
+    def init_sentry():
+        sentry_sdk.init(
+        dsn="https://2f9cb531ca3820e0aba34c3daf1db2a0@o4509147190460416.ingest.de.sentry.io/4509147194196048",
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        )
 
 class DBController():
     def db_startup():
@@ -169,8 +180,10 @@ class Controller():
             case "Management":
                 match choice:
                     case 1:
-                        views.Views.show_all_data()
+                        events = Event.select()
+                        views.Views.show_all_data(events)
                     case 2:
+                        events = Event.select().where(Event.logistic_contact == "None")
                         views.Views.show_unsupported_events()
                     case _:
                         print(Colors.error("Veuillez renseigner un choix valide"))
@@ -179,11 +192,14 @@ class Controller():
             case "commercial":
                 match choice:
                     case 1:
-                        views.Views.show_all_data()
+                        events = Event.select()
+                        views.Views.show_all_data(events)
                     case 2:
-                        views.Views.show_unsigned_contracts()
+                        contracts = Contract.select().where(Contract.state != "Signé")
+                        views.Views.show_unsigned_contracts(contracts)
                     case 3:
-                        views.Views.show_unsigned_contracts()
+                        contracts = Contract.select().where(Contract.rest_amount != 0)
+                        views.Views.show_unpaid_contracts(contracts)
                     case _:
                         print(Colors.error("Veuillez renseigner un choix valide"))
                         views.Views.select_data_display(user)           
@@ -191,8 +207,10 @@ class Controller():
             case "support":
                 match choice:
                     case 1:
-                        views.Views.show_all_data()
+                        events = Event.select()
+                        views.Views.show_all_data(events)
                     case 2:
+                        events = Event.select().where(Event.logistic_contact == user)
                         views.Views.show_my_events(user)
                     case _:
                         print(Colors.error("Veuillez renseigner un choix valide"))
@@ -219,7 +237,8 @@ class ClientController():
             print(Colors.info("Il faut être dans l'équipe commerciale pour mettre à jour un client."))
             return
         choice = views.Views.select_client_update()
-        client = views.Views.select_client()
+        clients = Client.select()
+        client = views.Views.select_client(clients)
         match choice:
             case 1:
                 new_phone = views.Views.update_client_phone()
@@ -250,7 +269,8 @@ class Event_Contract_Controller():
         if user.get_permission == Permissions.LOGISTIC_TEAM:
             print(Colors.info("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un client."))
             return
-        contract = views.Views.select_contract()
+        contracts = Contract.select()
+        contract = views.Views.select_contract(contracts)
         match user.get_permission:
             case Permissions.MANAGEMENT_TEAM:
                 new_state = views.Views.update_contract_state()
@@ -264,7 +284,7 @@ class Event_Contract_Controller():
         if user.get_permission != Permissions.COMMERCIAL_TEAM:
             print(Colors.info("Il faut être dans l'équipe commerciale pour créer un évènement."))
             return
-        event_infos = views.Views.create_event()
+        event_infos = views.Views.create_event(contracts = Contract.select())
         try:
             Event.create_event(event_infos)
             print(Colors.success(f"Création de l'évènement {event_infos['name']} réussie !"))
@@ -280,8 +300,10 @@ class Event_Contract_Controller():
         if user.get_permission != Permissions.MANAGEMENT_TEAM:
             print(Colors.info("Il faut être dans l'équipe de commerciale pour mettre à jour un évènement."))
             return
-        event = views.Views.select_event()
-        logistic_contact = views.Views.add_support()
+        events = Event.select()
+        event = views.Views.select_event(events)
+        supports = User.select().where(User.role == "support")
+        logistic_contact = views.Views.add_support(supports)
         event.add_support(logistic_contact)
        
             

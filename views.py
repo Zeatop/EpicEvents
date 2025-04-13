@@ -80,9 +80,8 @@ class Views():
         }
 
     @staticmethod
-    def select_client():
+    def select_client(clients):
         print(Colors.highlight("\nListe des clients disponibles:"))
-        clients = Client.select()
         
         if not clients:
             print(Colors.info("Aucun client n'est disponible."))
@@ -166,12 +165,11 @@ class Views():
         }
 
     @staticmethod
-    def create_event():
+    def create_event(contracts):
         print(Colors.highlight("Veuillez renseigner les informations de l'événement à créer"))
         
         # Afficher la liste des contrats existants
         print(Colors.highlight("\nListe des contrats disponibles:"))
-        contracts = Contract.select()
         for contract in contracts:
             print(Colors.prompt(f"ID: {contract.id} - Client: {contract.client.name} - Commercial {contract.commercial.name}"))
         contract_id = input("Sélectionnez l'ID du contrat: ")
@@ -257,9 +255,8 @@ class Views():
         }
 
     @staticmethod
-    def select_event():
+    def select_event(events):
         print(Colors.highlight("\nListe des événements disponibles:"))
-        events = Event.select()
         
         if not events:
             print(Colors.info("Aucun événement n'est disponible."))
@@ -279,9 +276,9 @@ class Views():
             return None
 
     @staticmethod
-    def select_contract():
+    def select_contract(contracts):
         print(Colors.highlight("\nListe des contrats disponibles:"))
-        contracts = Contract.select()
+        
         
         if not contracts:
             print(Colors.info("Aucun contrat n'est disponible."))
@@ -337,10 +334,9 @@ class Views():
         return states.get(state_choice, "En attente")
 
     @staticmethod
-    def add_support():
+    def add_support(supports):
         # Liste des contacts de support disponibles
         print(Colors.highlight("\nListe des contacts logistiques disponibles:"))
-        supports = User.select().where(User.role == "support")
         for support in supports:
             print(Colors.prompt(f"ID: {support.id} - Nom: {support.name}"))
         logistic_contact_id = input("Sélectionnez l'ID du nouveau contact logistique: ")
@@ -376,8 +372,7 @@ class Views():
                 return choice
  
     @staticmethod
-    def show_all_data():
-        events = Event.select()
+    def show_all_data(events):
         
         # Préparation des données pour le tableau
         table_data = []
@@ -397,8 +392,7 @@ class Views():
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
     @staticmethod
-    def show_unsupported_events():
-        events = Event.select().where(Event.logistic_contact == "None")
+    def show_unsupported_events(events):
         
         # Préparation des données pour le tableau
         table_data = []
@@ -418,8 +412,7 @@ class Views():
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
     @staticmethod
-    def show_my_events(user):
-        events = Event.select().where(Event.logistic_contact == user)
+    def show_my_events(events):
         
         # Préparation des données pour le tableau
         table_data = []
@@ -439,8 +432,7 @@ class Views():
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
     @staticmethod
-    def show_unpaid_contracts():
-        contracts = Contract.select().where(Contract.rest_amount != 0)
+    def show_unpaid_contracts(contracts):
         
         # Préparation des données pour le tableau
         table_data = []
@@ -460,8 +452,7 @@ class Views():
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
     @staticmethod
-    def show_unsigned_contracts():
-        contracts = Contract.select().where(Contract.state != "Signé")
+    def show_unsigned_contracts(contracts):
         
         # Préparation des données pour le tableau
         table_data = []
