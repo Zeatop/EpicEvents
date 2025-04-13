@@ -68,14 +68,15 @@ class Controller():
             case 3:
                 account_infos["role"] = UserRole.MANAGEMENT.value
 
-        if user.get_permission == Permissions.MANAGEMENT_TEAM:
-            try:
-                User.create_user(account_infos)
-                print(f"Création du compte {account_infos['role'].value} réussie !")
-            except Exception as e:
-                print(f"Une erreur est survenue lors de la création du compte : {e}")
-        else:
+        if user.get_permission != Permissions.MANAGEMENT_TEAM:
             print("Il faut être dans l'équipe de gestion pour créer un compte.")
+            return
+        try:
+            User.create_user(account_infos)
+            print(f"Création du compte {account_infos['role'].value} réussie !")
+        except Exception as e:
+            print(f"Une erreur est survenue lors de la création du compte : {e}")
+            
 
     @staticmethod
     def action_selector(user:User, choice):
@@ -175,83 +176,88 @@ class Controller():
 class ClientController():
 
     def create_client(user:User):
-        if user.get_permission == Permissions.COMMERCIAL_TEAM:
-            client_infos = views.Views.create_client()
-            try:
-                Client.create_client(client_infos)
-                print(f"Création du client {client_infos['name'].value} réussie !")
-            except Exception as e:
-                print(f"Une erreur est survenue lors de la création du client : {e}\nVeuillez réessayer.")
-                ClientController.create_client(user)
-        else:
+        if user.get_permission != Permissions.COMMERCIAL_TEAM:
             print("Il faut être dans l'équipe commerciale pour créer un client.")
+            return
+        client_infos = views.Views.create_client()
+        try:
+            Client.create_client(client_infos)
+            print(f"Création du client {client_infos['name'].value} réussie !")
+        except Exception as e:
+            print(f"Une erreur est survenue lors de la création du client : {e}\nVeuillez réessayer.")
+            ClientController.create_client(user)        
     
     def update_client(user:User):
-        if user.get_permission == Permissions.COMMERCIAL_TEAM:
-            choice = views.Views.select_client_update()
-            client = views.Views.select_client()
-            match choice:
-                case 1:
-                    new_phone = views.Views.update_client_phone()
-                    client.update_phone(new_phone)
-                case 2:
-                    new_mail = views.Views.update_client_mail()
-                    client.update_mail(new_mail)
-                case _:
-                    print("Veuillez renseigner un choix valide")
-                    ClientController.update_client(user)
-
-        else:
+        if user.get_permission != Permissions.COMMERCIAL_TEAM:
             print("Il faut être dans l'équipe commerciale pour mettre à jour un client.")
-
+            return
+        choice = views.Views.select_client_update()
+        client = views.Views.select_client()
+        match choice:
+            case 1:
+                new_phone = views.Views.update_client_phone()
+                client.update_phone(new_phone)
+            case 2:
+                new_mail = views.Views.update_client_mail()
+                client.update_mail(new_mail)
+            case _:
+                print("Veuillez renseigner un choix valide")
+                ClientController.update_client(user)
+            
 
 class Event_Contract_Controller():
 
     def create_contract(user:User):
-        if user.get_permission == Permissions.MANAGEMENT_TEAM:
-            contract_infos = views.Views.create_contract()
-            try:
-                Contract.create_contract(contract_infos)
-                print(f"Création du {contract_infos['name'].value} réussie !")
-            except Exception as e:
-                print(f"Une erreur est survenue lors de la création du contrat : {e}\nVeuillez réessayer")
-                Event_Contract_Controller.create_contract(user)
-        else:
+        if user.get_permission != Permissions.MANAGEMENT_TEAM:
             print("Il faut être dans l'équipe gestion pour créer un contrat.")
-
+            return
+        contract_infos = views.Views.create_contract()
+        try:
+            Contract.create_contract(contract_infos)
+            print(f"Création du {contract_infos['name'].value} réussie !")
+        except Exception as e:
+            print(f"Une erreur est survenue lors de la création du contrat : {e}\nVeuillez réessayer")
+            Event_Contract_Controller.create_contract(user)
+            
     def update_contract(user:User):
-        if user.get_permission == Permissions.COMMERCIAL_TEAM or user.get_permission == Permissions.MANAGEMENT_TEAM :
-            contract = views.Views.select_contract()
-            match user.get_permission:
-                case Permissions.MANAGEMENT_TEAM:
-                    new_state = views.Views.update_contract_state()
-                    contract.update_contract_state(new_state)
-                case Permissions.COMMERCIAL_TEAM:
-                    #TODO Rajouter condition du client que le commercial a créé
-                    amount = views.Views.update_rest_amount()
-                    contract.update_rest_amount(amount)
-        else:
+        if user.get_permission == Permissions.LOGISTIC_TEAM:
             print("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un client.")
+            return
+        contract = views.Views.select_contract()
+        match user.get_permission:
+            case Permissions.MANAGEMENT_TEAM:
+                new_state = views.Views.update_contract_state()
+                contract.update_contract_state(new_state)
+            case Permissions.COMMERCIAL_TEAM:
+                #TODO Rajouter condition du client que le commercial a créé
+                amount = views.Views.update_rest_amount()
+                contract.update_rest_amount(amount)
 
     def create_event(user:User):
-        if user.get_permission == Permissions.COMMERCIAL_TEAM:
-            event_infos = views.Views.create_event()
-            try:
-                Event.create_event(event_infos)
-                print(f"Création de l'évènement {event_infos['name'].value} réussie !")
-            except Exception as e:
-                print(f"Une erreur est survenue lors de la création de l'évènement : {e}\Veuillez réessayer.")
-                Event_Contract_Controller.create_event(user)
-        else:
+        if user.get_permission != Permissions.COMMERCIAL_TEAM:
             print("Il faut être dans l'équipe commerciale pour créer un évènement.")
+            return
+        event_infos = views.Views.create_event()
+        try:
+            Event.create_event(event_infos)
+            print(f"Création de l'évènement {event_infos['name'].value} réussie !")
+        except Exception as e:
+            print(f"Une erreur est survenue lors de la création de l'évènement : {e}\Veuillez réessayer.")
+            Event_Contract_Controller.create_event(user) 
+            
     
     def update_event(user:User):
-        if user.get_permission == Permissions.MANAGEMENT_TEAM:
-            event = views.Views.select_event()
-            logistic_contact = views.Views.add_support()
-            event.add_support(logistic_contact)
-        else:
+        if not Event.select():
+            print("Aucun évènement n'éxiste")
+            return
+        if user.get_permission != Permissions.MANAGEMENT_TEAM:
             print("Il faut être dans l'équipe de commerciale pour mettre à jour un évènement.")
+            return
+        event = views.Views.select_event()
+        logistic_contact = views.Views.add_support()
+        event.add_support(logistic_contact)
+       
+            
             
     
 
