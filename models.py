@@ -165,9 +165,13 @@ class Contract(Model):
 
     @classmethod
     def create_contract(cls, contract_dict:dict):
-        contract = cls.create(client=contract_dict["client"], commercial=contract_dict["commercial"], total_amount=contract_dict["total_amount"],
-                   rest_amount=contract_dict["rest_amount"], state=contract_dict["state"])
-        return contract
+        try:
+            contract = cls.create(client=contract_dict["client"], commercial=contract_dict["commercial"], total_amount=contract_dict["total_amount"],
+                    rest_amount=contract_dict["rest_amount"], state=contract_dict["state"])
+            return contract
+        except Exception as e:
+            print(Colors.error(f"Une erreur est survenue lors de la création du contrat : {e}"))
+            return None
     
     def update_contract_state(self, state):
         self.state = state
@@ -196,13 +200,22 @@ class Event(Model):
     
     @classmethod
     def create_event(cls, contract_infos:dict):
-        if "logistic_contact" in contract_infos and contract_infos["logistic_contact"]:
-            event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
-                    name=contract_infos["name"], logistic_contact=contract_infos["logistic_contact"],location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
-        else:
-            event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
-                    name=contract_infos["name"], location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
-        return event
+        try:
+            if "logistic_contact" in contract_infos and contract_infos["logistic_contact"]:
+                event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
+                        name=contract_infos["name"], logistic_contact=contract_infos["logistic_contact"],location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
+            else:
+                event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
+                        name=contract_infos["name"], location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
+            return event
+        except Exception as e:
+            print(Colors.error(f"Une erreur est survenue lors de la création de l'évènement : {e}\nVeuillez réessayer."))
+            return None
     
     def add_support(self, logistic_contact:User):
-        self.logistic_contact = logistic_contact
+        try:
+            self.logistic_contact = logistic_contact
+            return True
+        except Exception as e:
+            print(Colors.error(f"Erreur lors de l'ajout du support à l'évènement: {e}"))
+            return None

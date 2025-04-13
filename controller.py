@@ -183,8 +183,8 @@ class Controller():
                         events = Event.select()
                         views.Views.show_all_data(events)
                     case 2:
-                        events = Event.select().where(Event.logistic_contact == "None")
-                        views.Views.show_unsupported_events()
+                        events = Event.select().where(Event.logistic_contact.is_null())
+                        views.Views.show_unsupported_events(events)
                     case _:
                         print(Colors.error("Veuillez renseigner un choix valide"))
                         views.Views.select_data_display(user)
@@ -211,12 +211,10 @@ class Controller():
                         views.Views.show_all_data(events)
                     case 2:
                         events = Event.select().where(Event.logistic_contact == user)
-                        views.Views.show_my_events(user)
+                        views.Views.show_my_events(events)
                     case _:
                         print(Colors.error("Veuillez renseigner un choix valide"))
                         views.Views.home_menu(user)
-                                            
-
 
 class ClientController():
 
@@ -249,28 +247,24 @@ class ClientController():
             case _:
                 print(Colors.error("Veuillez renseigner un choix valide"))
                 ClientController.update_client(user)
-            
 
 class Event_Contract_Controller():
 
     def create_contract(user:User):
-        if user.get_permission != Permissions.MANAGEMENT_TEAM:
-            print(Colors.info("Il faut être dans l'équipe gestion pour créer un contrat."))
+        
+        contracts = Contract.select()
+        clients = Client.select()
+        contract_infos = views.Views.create_contract(user, contracts, clients)
+        if not contract_infos:
             return
-        contract_infos = views.Views.create_contract()
-        try:
-            contract = Contract.create_contract(contract_infos)
-            print(Colors.success(f"Création du {contract} réussie !"))
-        except Exception as e:
-            print(Colors.error(f"Une erreur est survenue lors de la création du contrat : {e}\nVeuillez réessayer"))
-            Event_Contract_Controller.create_contract(user)
+        contract = Contract.create_contract(contract_infos)
+        if contract:
+            print(Colors.success(f"Création du {contract} réussie !"))      
             
     def update_contract(user:User):
-        if user.get_permission == Permissions.LOGISTIC_TEAM:
-            print(Colors.info("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un client."))
-            return
+        
         contracts = Contract.select()
-        contract = views.Views.select_contract(contracts)
+        contract = views.Views.select_contract(user, contracts)
         match user.get_permission:
             case Permissions.MANAGEMENT_TEAM:
                 new_state = views.Views.update_contract_state()
@@ -281,31 +275,27 @@ class Event_Contract_Controller():
                 contract.update_rest_amount(amount)
 
     def create_event(user:User):
-        if user.get_permission != Permissions.COMMERCIAL_TEAM:
-            print(Colors.info("Il faut être dans l'équipe commerciale pour créer un évènement."))
+        
+        contracts = Contract.select()
+        event_infos = views.Views.create_event(user, contracts)
+        if not event_infos:
             return
-        event_infos = views.Views.create_event(contracts = Contract.select())
-        try:
-            Event.create_event(event_infos)
-            print(Colors.success(f"Création de l'évènement {event_infos['name']} réussie !"))
-        except Exception as e:
-            print(Colors.error(f"Une erreur est survenue lors de la création de l'évènement : {e}\nVeuillez réessayer."))
-            Event_Contract_Controller.create_event(user) 
-            
+        event = Event.create_event(event_infos)
+        if event:
+            print(Colors.success(f"Création de l'évènement {event_infos['name']} réussie !")) 
     
     def update_event(user:User):
-        if not Event.select():
-            print(Colors.info("Aucun évènement n'éxiste"))
-            return
-        if user.get_permission != Permissions.MANAGEMENT_TEAM:
-            print(Colors.info("Il faut être dans l'équipe de commerciale pour mettre à jour un évènement."))
-            return
+
         events = Event.select()
-        event = views.Views.select_event(events)
+        event = views.Views.select_event(user, events)
+        if not event:
+            return
         supports = User.select().where(User.role == "support")
-        logistic_contact = views.Views.add_support(supports)
-        event.add_support(logistic_contact)
-       
+        logistic_contact = views.Views.add_support(user, supports)
+        logistic_contact = User.get(User.id == logistic_contact)
+        added = event.add_support(logistic_contact)
+        if added:
+            print(Colors.success(f"Ajout de {logistic_contact.name} à l'évènement {event.name} réussie !"))
             
             
     

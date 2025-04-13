@@ -120,12 +120,22 @@ class Views():
         return new_mail
 
     @staticmethod
-    def create_contract():
+    def create_contract(user, contracts, clients):
+
+        if user.get_permission != Permissions.MANAGEMENT_TEAM:
+            print(Colors.info("Il faut être dans l'équipe gestion pour créer un contrat."))
+            return None
+        
+        if not contracts:
+            print(Colors.error("Il n'y a aucun client enregistré"))
+            return
+
         print(Colors.highlight("Veuillez renseigner les informations du contrat à créer"))
         
         # Afficher la liste des clients existants
         print(Colors.highlight("\nListe des clients disponibles:"))
-        clients = Client.select()
+        
+        
         for client in clients:
             print(Colors.prompt(f"ID: {client.id} - Nom: {client.name}"))
         client_id = input("Sélectionnez l'ID du client: ")
@@ -163,9 +173,13 @@ class Views():
             "rest_amount": float(rest_amount or total_amount),
             "state": state
         }
-
+        
     @staticmethod
-    def create_event(contracts):
+    def create_event(user, contracts):
+
+        if user.get_permission != Permissions.COMMERCIAL_TEAM:
+            print(Colors.info("Il faut être dans l'équipe commerciale pour créer un évènement."))
+            return None
         print(Colors.highlight("Veuillez renseigner les informations de l'événement à créer"))
         
         # Afficher la liste des contrats existants
@@ -255,7 +269,11 @@ class Views():
         }
 
     @staticmethod
-    def select_event(events):
+    def select_event(user, events):
+        if user.get_permission != Permissions.MANAGEMENT_TEAM:
+            print(Colors.info("Il faut être dans l'équipe gestion ajouter un support."))
+            return None
+        
         print(Colors.highlight("\nListe des événements disponibles:"))
         
         if not events:
@@ -276,10 +294,12 @@ class Views():
             return None
 
     @staticmethod
-    def select_contract(contracts):
+    def select_contract(user, contracts):
+        if user.get_permission == Permissions.LOGISTIC_TEAM:
+            print(Colors.info("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un contrat."))
+            return
         print(Colors.highlight("\nListe des contrats disponibles:"))
-        
-        
+         
         if not contracts:
             print(Colors.info("Aucun contrat n'est disponible."))
             return None
@@ -334,7 +354,11 @@ class Views():
         return states.get(state_choice, "En attente")
 
     @staticmethod
-    def add_support(supports):
+    def add_support(user, supports):
+
+        if user.get_permission != Permissions.MANAGEMENT_TEAM:
+            print(Colors.info("Il faut être dans l'équipe gestion pour ajouter un support."))
+            return None
         # Liste des contacts de support disponibles
         print(Colors.highlight("\nListe des contacts logistiques disponibles:"))
         for support in supports:
@@ -382,7 +406,7 @@ class Views():
                 event.contract.state, 
                 event.client.name, 
                 event.contract.commercial.name, 
-                event.logistic_contact.name
+                event.logistic_contact.name if event.logistic_contact else "Non assigné"
             ])
         
         # Définition des en-têtes
@@ -401,8 +425,8 @@ class Views():
                 event.name, 
                 event.contract.state, 
                 event.client.name, 
-                event.commercial.name, 
-                event.logistic_contact.name
+                event.contract.commercial.name, 
+                event.logistic_contact.name if event.logistic_contact else "Non assigné"
             ])
         
         # Définition des en-têtes
@@ -422,7 +446,7 @@ class Views():
                 event.contract.state, 
                 event.client.name, 
                 event.contract.commercial.name, 
-                event.logistic_contact.name
+                event.logistic_contact.name if event.logistic_contact else "Non assigné"
             ])
         
         # Définition des en-têtes
