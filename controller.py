@@ -144,6 +144,9 @@ class Controller():
                         views.Views.show_all_data()
                     case 2:
                         views.Views.show_unsupported_events()
+                    case _:
+                        print("Veuillez renseigner un choix valide")
+                        views.Views.select_data_display(user)
 
             case "commercial":
                 match choice:
@@ -153,6 +156,9 @@ class Controller():
                         views.Views.show_unsigned_contracts()
                     case 3:
                         views.Views.show_unsigned_contracts()
+                    case _:
+                        print("Veuillez renseigner un choix valide")
+                        views.Views.select_data_display(user)           
 
             case "support":
                 match choice:
@@ -160,6 +166,10 @@ class Controller():
                         views.Views.show_all_data()
                     case 2:
                         views.Views.show_my_events(user)
+                    case _:
+                        print("Veuillez renseigner un choix valide")
+                        views.Views.home_menu(user)
+                                            
 
 
 class ClientController():
@@ -171,7 +181,8 @@ class ClientController():
                 Client.create_client(client_infos)
                 print(f"Création du client {client_infos['name'].value} réussie !")
             except Exception as e:
-                print(f"Une erreur est survenue lors de la création du client : {e}")
+                print(f"Une erreur est survenue lors de la création du client : {e}\nVeuillez réessayer.")
+                ClientController.create_client(user)
         else:
             print("Il faut être dans l'équipe commerciale pour créer un client.")
     
@@ -186,6 +197,10 @@ class ClientController():
                 case 2:
                     new_mail = views.Views.update_client_mail()
                     client.update_mail(new_mail)
+                case _:
+                    print("Veuillez renseigner un choix valide")
+                    ClientController.update_client(user)
+
         else:
             print("Il faut être dans l'équipe commerciale pour mettre à jour un client.")
 
@@ -199,9 +214,10 @@ class Event_Contract_Controller():
                 Contract.create_contract(contract_infos)
                 print(f"Création du {contract_infos['name'].value} réussie !")
             except Exception as e:
-                print(f"Une erreur est survenue lors de la création de l'évènement : {e}")
+                print(f"Une erreur est survenue lors de la création du contrat : {e}\nVeuillez réessayer")
+                Event_Contract_Controller.create_contract(user)
         else:
-            print("Il faut être dans l'équipe commerciale pour créer un évènement.")
+            print("Il faut être dans l'équipe gestion pour créer un contrat.")
 
     def update_contract(user:User):
         if user.get_permission == Permissions.COMMERCIAL_TEAM or user.get_permission == Permissions.MANAGEMENT_TEAM :
@@ -224,7 +240,8 @@ class Event_Contract_Controller():
                 Event.create_event(event_infos)
                 print(f"Création de l'évènement {event_infos['name'].value} réussie !")
             except Exception as e:
-                print(f"Une erreur est survenue lors de la création de l'évènement : {e}")
+                print(f"Une erreur est survenue lors de la création de l'évènement : {e}\Veuillez réessayer.")
+                Event_Contract_Controller.create_event(user)
         else:
             print("Il faut être dans l'équipe commerciale pour créer un évènement.")
     
@@ -234,6 +251,7 @@ class Event_Contract_Controller():
             logistic_contact = views.Views.add_support()
             event.add_support(logistic_contact)
         else:
-            print("Il faut être dans l'équipe de gestion pour mettre à jour un client.")
+            print("Il faut être dans l'équipe de commerciale pour mettre à jour un évènement.")
+            
     
 
