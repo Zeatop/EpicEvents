@@ -2,6 +2,8 @@ import views
 from models import *
 import jwt
 
+DEBUG = True
+
 class DBController():
     def db_startup():
         db.connect()
@@ -20,8 +22,33 @@ class DBController():
                     "role": UserRole.MANAGEMENT.value
                 }
                 User.create_user(root_infos)
+            if DEBUG == True:
+                try:
+                    User.get(User.name=="TestCom")
+                except User.DoesNotExist:
+                    # Créer l'utilisateur root s'il n'existe pas
+                    commercial_infos = {
+                        "name":"TestCom",
+                        "mail": "TestCom",
+                        "phone": "TestCom",
+                        "password": "test",
+                        "role": UserRole.COMMERCIAL.value
+                    }
+                    User.create_user(commercial_infos)
+                try:
+                    User.get(User.name=="TestSup")
+                except User.DoesNotExist:
+                    # Créer l'utilisateur root s'il n'existe pas
+                    support_infos = {
+                        "name":"TestSup",
+                        "mail": "TestSup",
+                        "phone": "TestSup",
+                        "password": "test",
+                        "role": UserRole.SUPPORT.value
+                    }
+                    User.create_user(support_infos)
         except Exception as e:
-            print(f"Erreur lors de l'initialisation de la base de données: {e}")
+            print(Colors.error(f"Erreur lors de l'initialisation de la base de données: {e}"))
 
 class Controller():
 
@@ -42,14 +69,14 @@ class Controller():
             if Security.verify_password(user_infos["password"], user.password):
                 token = Token.generate_token(user.mail)
                 Token.store_token(token)
-                print(f"Connexion réussie pour {user.name}")
+                print(Colors.success(f"Connexion réussie pour {user.name}"))
                 return user
             else:
-                print("Mot de passe incorrect \nRéessayez de vous connecter")
+                print(Colors.error("Mot de passe incorrect \nRéessayez de vous connecter"))
                 Controller.login()
                 return None
         except User.DoesNotExist:
-            print("Utilisateur non trouvé")
+            print(Colors.error("Utilisateur non trouvé"))
             exit(0)
         
     @staticmethod
@@ -69,13 +96,13 @@ class Controller():
                 account_infos["role"] = UserRole.MANAGEMENT.value
 
         if user.get_permission != Permissions.MANAGEMENT_TEAM:
-            print("Il faut être dans l'équipe de gestion pour créer un compte.")
+            print(Colors.info("Il faut être dans l'équipe de gestion pour créer un compte."))
             return
         try:
             User.create_user(account_infos)
-            print(f"Création du compte {account_infos['role'].value} réussie !")
+            print(Colors.success(f"Création du compte {account_infos['role']} réussie !"))
         except Exception as e:
-            print(f"Une erreur est survenue lors de la création du compte : {e}")
+            print(Colors.error(f"Une erreur est survenue lors de la création du compte : {e}"))
             
 
     @staticmethod
@@ -99,7 +126,7 @@ class Controller():
                         Token.delete_local_token() 
                     exit(0)
                 else:
-                    print("Veuillez renseigner un choix valide")
+                    print(Colors.error("Veuillez renseigner un choix valide"))
                     views.Views.home_menu(user)
                     
             case "commercial":
@@ -119,7 +146,7 @@ class Controller():
                         Token.delete_local_token() 
                     exit(0)
                 else:
-                    print("Veuillez renseigner un choix valide")
+                    print(Colors.error("Veuillez renseigner un choix valide"))
                     views.Views.home_menu(user)
 
             case "support":
@@ -132,7 +159,7 @@ class Controller():
                         Token.delete_local_token() 
                     exit(0)
                 else:
-                    print("Veuillez renseigner un choix valide")
+                    print(Colors.error("Veuillez renseigner un choix valide"))
                     views.Views.home_menu(user)
 
     @staticmethod
@@ -146,7 +173,7 @@ class Controller():
                     case 2:
                         views.Views.show_unsupported_events()
                     case _:
-                        print("Veuillez renseigner un choix valide")
+                        print(Colors.error("Veuillez renseigner un choix valide"))
                         views.Views.select_data_display(user)
 
             case "commercial":
@@ -158,7 +185,7 @@ class Controller():
                     case 3:
                         views.Views.show_unsigned_contracts()
                     case _:
-                        print("Veuillez renseigner un choix valide")
+                        print(Colors.error("Veuillez renseigner un choix valide"))
                         views.Views.select_data_display(user)           
 
             case "support":
@@ -168,7 +195,7 @@ class Controller():
                     case 2:
                         views.Views.show_my_events(user)
                     case _:
-                        print("Veuillez renseigner un choix valide")
+                        print(Colors.error("Veuillez renseigner un choix valide"))
                         views.Views.home_menu(user)
                                             
 
@@ -177,19 +204,19 @@ class ClientController():
 
     def create_client(user:User):
         if user.get_permission != Permissions.COMMERCIAL_TEAM:
-            print("Il faut être dans l'équipe commerciale pour créer un client.")
+            print(Colors.info("Il faut être dans l'équipe commerciale pour créer un client."))
             return
         client_infos = views.Views.create_client()
         try:
             Client.create_client(client_infos)
-            print(f"Création du client {client_infos['name'].value} réussie !")
+            print(Colors.success(f"Création du client {client_infos['name']} réussie !"))
         except Exception as e:
-            print(f"Une erreur est survenue lors de la création du client : {e}\nVeuillez réessayer.")
+            print(Colors.error(f"Une erreur est survenue lors de la création du client : {e}\nVeuillez réessayer."))
             ClientController.create_client(user)        
     
     def update_client(user:User):
         if user.get_permission != Permissions.COMMERCIAL_TEAM:
-            print("Il faut être dans l'équipe commerciale pour mettre à jour un client.")
+            print(Colors.info("Il faut être dans l'équipe commerciale pour mettre à jour un client."))
             return
         choice = views.Views.select_client_update()
         client = views.Views.select_client()
@@ -201,7 +228,7 @@ class ClientController():
                 new_mail = views.Views.update_client_mail()
                 client.update_mail(new_mail)
             case _:
-                print("Veuillez renseigner un choix valide")
+                print(Colors.error("Veuillez renseigner un choix valide"))
                 ClientController.update_client(user)
             
 
@@ -209,19 +236,19 @@ class Event_Contract_Controller():
 
     def create_contract(user:User):
         if user.get_permission != Permissions.MANAGEMENT_TEAM:
-            print("Il faut être dans l'équipe gestion pour créer un contrat.")
+            print(Colors.info("Il faut être dans l'équipe gestion pour créer un contrat."))
             return
         contract_infos = views.Views.create_contract()
         try:
-            Contract.create_contract(contract_infos)
-            print(f"Création du {contract_infos['name'].value} réussie !")
+            contract = Contract.create_contract(contract_infos)
+            print(Colors.success(f"Création du {contract} réussie !"))
         except Exception as e:
-            print(f"Une erreur est survenue lors de la création du contrat : {e}\nVeuillez réessayer")
+            print(Colors.error(f"Une erreur est survenue lors de la création du contrat : {e}\nVeuillez réessayer"))
             Event_Contract_Controller.create_contract(user)
             
     def update_contract(user:User):
         if user.get_permission == Permissions.LOGISTIC_TEAM:
-            print("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un client.")
+            print(Colors.info("Il faut être dans l'équipe commerciale ou gestionnaire pour mettre à jour un client."))
             return
         contract = views.Views.select_contract()
         match user.get_permission:
@@ -235,23 +262,23 @@ class Event_Contract_Controller():
 
     def create_event(user:User):
         if user.get_permission != Permissions.COMMERCIAL_TEAM:
-            print("Il faut être dans l'équipe commerciale pour créer un évènement.")
+            print(Colors.info("Il faut être dans l'équipe commerciale pour créer un évènement."))
             return
         event_infos = views.Views.create_event()
         try:
             Event.create_event(event_infos)
-            print(f"Création de l'évènement {event_infos['name'].value} réussie !")
+            print(Colors.success(f"Création de l'évènement {event_infos['name']} réussie !"))
         except Exception as e:
-            print(f"Une erreur est survenue lors de la création de l'évènement : {e}\Veuillez réessayer.")
+            print(Colors.error(f"Une erreur est survenue lors de la création de l'évènement : {e}\nVeuillez réessayer."))
             Event_Contract_Controller.create_event(user) 
             
     
     def update_event(user:User):
         if not Event.select():
-            print("Aucun évènement n'éxiste")
+            print(Colors.info("Aucun évènement n'éxiste"))
             return
         if user.get_permission != Permissions.MANAGEMENT_TEAM:
-            print("Il faut être dans l'équipe de commerciale pour mettre à jour un évènement.")
+            print(Colors.info("Il faut être dans l'équipe de commerciale pour mettre à jour un évènement."))
             return
         event = views.Views.select_event()
         logistic_contact = views.Views.add_support()

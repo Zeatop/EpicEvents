@@ -1,5 +1,6 @@
 from models import *
 from tabulate import tabulate
+from colors import Colors
 
 class Views():
     
@@ -13,7 +14,7 @@ class Views():
 
     @staticmethod
     def create_user():
-        print("Veuillez renseigner les informations du compte à créer")
+        print(Colors.highlight("Veuillez renseigner les informations du compte à créer"))
         name = input("Nom: ")
         mail = input("Mail:")
         phone = input ("Numéro de téléphone: ")
@@ -68,7 +69,7 @@ class Views():
 
     @staticmethod
     def create_client():
-        print("Veuillez renseigner les informations du client à créer")
+        print(Colors.highlight("Veuillez renseigner les informations du client à créer"))
         name = input("Nom: ")
         mail = input("Mail: ")
         phone = input("Numéro de téléphone: ")
@@ -80,31 +81,31 @@ class Views():
 
     @staticmethod
     def select_client():
-        print("\nListe des clients disponibles:")
+        print(Colors.highlight("\nListe des clients disponibles:"))
         clients = Client.select()
         
         if not clients:
-            print("Aucun client n'est disponible.")
+            print(Colors.info("Aucun client n'est disponible."))
             return None
             
         for client in clients:
-            print(f"ID: {client.id} - Nom: {client.name} - Mail: {client.mail} - Téléphone: {client.phone}")
+            print(Colors.prompt(f"ID: {client.id} - Nom: {client.name} - Mail: {client.mail} - Téléphone: {client.phone}"))
         
         client_id = input("\nSélectionnez l'ID du client à mettre à jour: ")
         
         try:
             selected_client = Client.get(Client.id == int(client_id))
-            print(f"\nClient sélectionné: {selected_client.name}")
+            print(Colors.highlight(f"\nClient sélectionné: {selected_client.name}"))
             return selected_client
         except (Client.DoesNotExist, ValueError):
-            print("Client invalide ou non trouvé.")
+            print(Colors.error("Client invalide ou non trouvé."))
             return None
 
     @staticmethod
     def select_client_update():
-        print("\nQuelle mise à jour souhaitez-vous effectuer?")
-        print("1 - Mettre à jour le numéro de téléphone")
-        print("2 - Mettre à jour l'adresse mail")
+        print(Colors.highlight("\nQuelle mise à jour souhaitez-vous effectuer?"))
+        print(Colors.prompt("1 - Mettre à jour le numéro de téléphone"))
+        print(Colors.prompt("2 - Mettre à jour l'adresse mail"))
         
         choice = input("Votre choix (1 ou 2): ")
         return int(choice)
@@ -121,20 +122,20 @@ class Views():
 
     @staticmethod
     def create_contract():
-        print("Veuillez renseigner les informations du contrat à créer")
+        print(Colors.highlight("Veuillez renseigner les informations du contrat à créer"))
         
         # Afficher la liste des clients existants
-        print("\nListe des clients disponibles:")
+        print(Colors.highlight("\nListe des clients disponibles:"))
         clients = Client.select()
         for client in clients:
-            print(f"ID: {client.id} - Nom: {client.name}")
+            print(Colors.prompt(f"ID: {client.id} - Nom: {client.name}"))
         client_id = input("Sélectionnez l'ID du client: ")
         
         # Afficher la liste des commerciaux
-        print("\nListe des commerciaux disponibles:")
+        print(Colors.highlight("\nListe des commerciaux disponibles:"))
         commercials = User.select().where(User.role == "commercial")
         for commercial in commercials:
-            print(f"ID: {commercial.id} - Nom: {commercial.name}")
+            print(Colors.prompt(f"ID: {commercial.id} - Nom: {commercial.name}"))
         commercial_id = input("Sélectionnez l'ID du commercial: ")
         
         total_amount = input("Montant total: ")
@@ -144,9 +145,9 @@ class Views():
         if not rest_amount:
             rest_amount = total_amount
         
-        print("\nÉtats possibles du contrat:")
-        print("1 - En attente")
-        print("2 - Signé")
+        print(Colors.highlight("\nÉtats possibles du contrat:"))
+        print(Colors.prompt("1 - En attente"))
+        print(Colors.prompt("2 - Signé"))
         state_choice = input("Sélectionnez l'état du contrat (1-2): ")
         
         states = {
@@ -166,22 +167,22 @@ class Views():
 
     @staticmethod
     def create_event():
-        print("Veuillez renseigner les informations de l'événement à créer")
+        print(Colors.highlight("Veuillez renseigner les informations de l'événement à créer"))
         
         # Afficher la liste des contrats existants
-        print("\nListe des contrats disponibles:")
+        print(Colors.highlight("\nListe des contrats disponibles:"))
         contracts = Contract.select()
         for contract in contracts:
-            print(f"ID: {contract.id} - Client: {contract.client.name} - Commercial {contract.commercial.name}")
+            print(Colors.prompt(f"ID: {contract.id} - Client: {contract.client.name} - Commercial {contract.commercial.name}"))
         contract_id = input("Sélectionnez l'ID du contrat: ")
         
         # Le client est déjà associé au contrat, on le récupère automatiquement
         try:
             selected_contract = Contract.get(Contract.id == int(contract_id))
             client_id = selected_contract.client.id
-            print(f"Client associé: {selected_contract.client.name}")
+            print(Colors.info(f"Client associé: {selected_contract.client.name}"))
         except Contract.DoesNotExist:
-            print("Contrat non trouvé.")
+            print(Colors.error("Contrat non trouvé."))
             client_id = input("ID du client (saisie manuelle): ")
         
         name = input("Nom de l'événement: ")
@@ -189,7 +190,7 @@ class Views():
         # Gestion des dates avec conversion en datetime
         import datetime
         
-        print("\nDate et heure de début:")
+        print(Colors.highlight("\nDate et heure de début:"))
         start_day = input("Jour (JJ): ")
         start_month = input("Mois (MM): ")
         start_year = input("Année (AAAA): ")
@@ -202,10 +203,10 @@ class Views():
                 int(start_hour), int(start_minute)
             )
         except ValueError:
-            print("Format de date invalide. Utilisation de la date et heure actuelles.")
+            print(Colors.error("Format de date invalide. Utilisation de la date et heure actuelles."))
             event_start = datetime.datetime.now()
         
-        print("\nDate et heure de fin:")
+        print(Colors.highlight("\nDate et heure de fin:"))
         end_day = input("Jour (JJ): ")
         end_month = input("Mois (MM): ")
         end_year = input("Année (AAAA): ")
@@ -218,19 +219,30 @@ class Views():
                 int(end_hour), int(end_minute)
             )
         except ValueError:
-            print("Format de date invalide. Utilisation de la date actuelle + 1 jour.")
+            print(Colors.error("Format de date invalide. Utilisation de la date actuelle + 1 jour."))
             event_end = datetime.datetime.now() + datetime.timedelta(days=1)
-        
-        # Liste des contacts de support disponibles
-        print("\nListe des contacts logistiques disponibles:")
-        supports = User.select().where(User.role == "support")
-        for support in supports:
-            print(f"ID: {support.id} - Nom: {support.name}")
-        logistic_contact_id = input("Sélectionnez l'ID du contact logistique: ")
-        
+
         location = input("Lieu de l'événement: ")
         attendees = input("Nombre de participants: ")
         notes = input("Notes supplémentaires (facultatif): ")
+        # Liste des contacts de support disponibles
+        print(Colors.highlight("\nListe des contacts logistiques disponibles:"))
+        supports = User.select().where(User.role == "support")
+        if not supports:
+            return {
+            "contract": int(contract_id),
+            "client": int(client_id),
+            "name": name,
+            "event_start": event_start,
+            "event_end": event_end,
+            "location": location,
+            "attendees": int(attendees) if attendees.isdigit() else 0,
+            "notes": notes if notes else None
+        }
+
+        for support in supports:
+            print(Colors.prompt(f"ID: {support.id} - Nom: {support.name}"))
+        logistic_contact_id = input("Sélectionnez l'ID du contact logistique: ")
         
         return {
             "contract": int(contract_id),
@@ -246,84 +258,80 @@ class Views():
 
     @staticmethod
     def select_event():
-        print("\nListe des événements disponibles:")
+        print(Colors.highlight("\nListe des événements disponibles:"))
         events = Event.select()
         
         if not events:
-            print("Aucun événement n'est disponible.")
+            print(Colors.info("Aucun événement n'est disponible."))
             return None
             
         for event in events:
-            print(f"ID: {event.id} - Nom: {event.name} - Date: {event.event_start} - Lieu: {event.location}")
+            print(Colors.prompt(f"ID: {event.id} - Nom: {event.name} - Date: {event.event_start} - Lieu: {event.location}"))
         
         event_id = input("\nSélectionnez l'ID de l'événement à mettre à jour: ")
         
         try:
             selected_event = Event.get(Event.id == int(event_id))
-            print(f"\nÉvénement sélectionné: {selected_event.name} - Lieu: {selected_event.location}")
+            print(Colors.highlight(f"\nÉvénement sélectionné: {selected_event.name} - Lieu: {selected_event.location}"))
             return selected_event
         except (Event.DoesNotExist, ValueError):
-            print("Événement invalide ou non trouvé.")
+            print(Colors.error("Événement invalide ou non trouvé."))
             return None
 
     @staticmethod
     def select_contract():
-        print("\nListe des contrats disponibles:")
+        print(Colors.highlight("\nListe des contrats disponibles:"))
         contracts = Contract.select()
         
         if not contracts:
-            print("Aucun contrat n'est disponible.")
+            print(Colors.info("Aucun contrat n'est disponible."))
             return None
             
         for contract in contracts:
-            print(f"ID: {contract.id} - Client: {contract.client.name} - État: {contract.state} - Montant restant: {contract.rest_amount}")
+            print(Colors.prompt(f"ID: {contract.id} - Client: {contract.client.name} - État: {contract.state} - Montant restant: {contract.rest_amount}"))
         
         contract_id = input("\nSélectionnez l'ID du contrat à mettre à jour: ")
         
         try:
             selected_contract = Contract.get(Contract.id == int(contract_id))
-            print(f"\nContrat sélectionné: {selected_contract.id} - Client: {selected_contract.client.name}")
+            print(Colors.highlight(f"\nContrat sélectionné: {selected_contract.id} - Client: {selected_contract.client.name}"))
             return selected_contract
         except (Contract.DoesNotExist, ValueError):
-            print("Contrat invalide ou non trouvé.")
+            print(Colors.error("Contrat invalide ou non trouvé."))
             return None
 
     @staticmethod
     def update_rest_amount():
-        print("\nMise à jour du montant restant à payer")
+        print(Colors.highlight("\nMise à jour du montant restant à payer"))
         
         amount_input = input("Montant du paiement à déduire du reste à payer: ")
         
         try:
             amount = float(amount_input)
             if amount <= 0:
-                print("Le montant doit être positif. Utilisez une valeur par défaut de 0.")
+                print(Colors.error("Le montant doit être positif. Utilisez une valeur par défaut de 0."))
                 return 0
             
             confirmation = input(f"Confirmer le paiement de {amount} € ? (O/N): ")
             if confirmation.upper() in ["O", "OUI", "Y", "YES"]:
                 return amount
             else:
-                print("Paiement annulé.")
+                print(Colors.info("Paiement annulé."))
                 return 0
         except ValueError:
-            print("Montant invalide. Veuillez entrer un nombre valide.")
+            print(Colors.error("Montant invalide. Veuillez entrer un nombre valide."))
             return 0
 
     @staticmethod
     def update_contract_state():
-        print("\nÉtats possibles du contrat:")
-        print("1 - En attente")
-        print("2 - Signé")
-        print("3 - En cours")
-        print("4 - Terminé")
-        state_choice = input("Sélectionnez le nouvel état du contrat (1-4): ")
+        print(Colors.highlight("\nÉtats possibles du contrat:"))
+        print(Colors.prompt("1 - En attente"))
+        print(Colors.prompt("2 - Signé"))
+        state_choice = input("Sélectionnez le nouvel état du contrat (1-2): ")
         
         states = {
             "1": "En attente",
             "2": "Signé",
-            "3": "En cours",
-            "4": "Terminé"
         }
         
         return states.get(state_choice, "En attente")
@@ -331,10 +339,10 @@ class Views():
     @staticmethod
     def add_support():
         # Liste des contacts de support disponibles
-        print("\nListe des contacts logistiques disponibles:")
+        print(Colors.highlight("\nListe des contacts logistiques disponibles:"))
         supports = User.select().where(User.role == "support")
         for support in supports:
-            print(f"ID: {support.id} - Nom: {support.name}")
+            print(Colors.prompt(f"ID: {support.id} - Nom: {support.name}"))
         logistic_contact_id = input("Sélectionnez l'ID du nouveau contact logistique: ")
         
         return int(logistic_contact_id)
@@ -378,7 +386,7 @@ class Views():
                 event.name, 
                 event.contract.state, 
                 event.client.name, 
-                event.commercial.name, 
+                event.contract.commercial.name, 
                 event.logistic_contact.name
             ])
         
@@ -390,7 +398,7 @@ class Views():
 
     @staticmethod
     def show_unsupported_events():
-        events = Event.get(Event.logistic_contact == "None")
+        events = Event.select().where(Event.logistic_contact == "None")
         
         # Préparation des données pour le tableau
         table_data = []
@@ -411,7 +419,7 @@ class Views():
 
     @staticmethod
     def show_my_events(user):
-        events = Event.get(Event.logistic_contact == user)
+        events = Event.select().where(Event.logistic_contact == user)
         
         # Préparation des données pour le tableau
         table_data = []
@@ -420,7 +428,7 @@ class Views():
                 event.name, 
                 event.contract.state, 
                 event.client.name, 
-                event.commercial.name, 
+                event.contract.commercial.name, 
                 event.logistic_contact.name
             ])
         
@@ -432,7 +440,7 @@ class Views():
 
     @staticmethod
     def show_unpaid_contracts():
-        contracts = Contract.get(Contract.rest_amount != 0)
+        contracts = Contract.select().where(Contract.rest_amount != 0)
         
         # Préparation des données pour le tableau
         table_data = []
@@ -453,7 +461,7 @@ class Views():
 
     @staticmethod
     def show_unsigned_contracts():
-        contracts = Contract.get(Contract.state != "Signé")
+        contracts = Contract.select().where(Contract.state != "Signé")
         
         # Préparation des données pour le tableau
         table_data = []

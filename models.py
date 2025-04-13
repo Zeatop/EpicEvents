@@ -1,5 +1,7 @@
 from enum import Enum, auto
+from colors import Colors
 import datetime
+from decimal import Decimal
 from peewee import *
 import jwt
 import bcrypt
@@ -116,10 +118,10 @@ class Token(Model):
             decoded_payload = jwt.decode(token, secret_key, algorithms=['HS256'])
             return decoded_payload
         except jwt.ExpiredSignatureError:
-            print('Le token a expiré')
+            print(Colors.info('Le token a expiré'))
             return None
         except jwt.InvalidTokenError:
-            print('Token non valide')
+            print(Colors.error('Token non valide'))
             return None
 
     @classmethod
@@ -141,11 +143,11 @@ class Token(Model):
     def delete_local_token():
         try:
             os.remove('.token')
-            print("Token local supprimé.")
+            print(Colors.info("Token local supprimé."))
         except FileNotFoundError:
-            print("Aucun token local à supprimer.")
+            print(Colors.info("Aucun token local à supprimer."))
         except Exception as e:
-            print(f"Erreur lors de la suppression du token local : {e}")
+            print(Colors.error(f"Erreur lors de la suppression du token local : {e}"))
 
 class Contract(Model):
     client = ForeignKeyField(Client, backref='contracts')
@@ -172,12 +174,12 @@ class Contract(Model):
         self.save()
     
     def update_rest_amount(self, amount):
-        self.rest_amount = self.rest_amount - amount
+        self.rest_amount = self.rest_amount - Decimal(str(amount))
         self.save()   
 
 class Event(Model):
     contract = ForeignKeyField(Contract, backref='events')
-    client = ForeignKeyField(User, backref='events')
+    client = ForeignKeyField(Client, backref='events')
     name = CharField(unique=True)
     event_start = DateTimeField()
     event_end = DateTimeField()
@@ -194,8 +196,12 @@ class Event(Model):
     
     @classmethod
     def create_event(cls, contract_infos:dict):
-        event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
-                   logistic_contact=contract_infos["logistic_contact"],location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
+        if "logistic_contact" in contract_infos and contract_infos["logistic_contact"]:
+            event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
+                    name=contract_infos["name"], logistic_contact=contract_infos["logistic_contact"],location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
+        else:
+            event = cls.create(contract=contract_infos["contract"], client=contract_infos["client"], event_start=contract_infos["event_start"], event_end=contract_infos["event_end"],
+                    name=contract_infos["name"], location=contract_infos["location"], attendees=contract_infos["attendees"], notes=contract_infos["notes"])
         return event
     
     def add_support(self, logistic_contact:User):
