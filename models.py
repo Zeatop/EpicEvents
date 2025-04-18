@@ -215,6 +215,7 @@ class Event(Model):
     def add_support(self, logistic_contact:User):
         try:
             self.logistic_contact = logistic_contact
+            self.save()
             return True
         except Exception as e:
             print(Colors.error(f"Erreur lors de l'ajout du support à l'évènement: {e}"))

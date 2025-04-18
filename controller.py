@@ -234,9 +234,11 @@ class ClientController():
         if user.get_permission != Permissions.COMMERCIAL_TEAM:
             print(Colors.info("Il faut être dans l'équipe commerciale pour mettre à jour un client."))
             return
-        choice = views.Views.select_client_update()
         clients = Client.select()
         client = views.Views.select_client(clients)
+        if not client:
+            return
+        choice = views.Views.select_client_update()
         match choice:
             case 1:
                 new_phone = views.Views.update_client_phone()
@@ -273,6 +275,8 @@ class Event_Contract_Controller():
             case Permissions.COMMERCIAL_TEAM:
                 #TODO Rajouter condition du client que le commercial a créé
                 amount = views.Views.update_rest_amount()
+                if amount == None  or amount == 0: 
+                    return
                 contract.update_rest_amount(amount)
 
     def create_event(user:User):
