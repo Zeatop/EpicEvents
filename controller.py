@@ -180,8 +180,8 @@ class Controller():
             case "Management":
                 match choice:
                     case 1:
-                        events = Event.select()
-                        views.Views.show_all_data(events)
+                        contracts = Contract.select()
+                        views.Views.show_all_data(contracts)
                     case 2:
                         events = Event.select().where(Event.logistic_contact.is_null())
                         views.Views.show_unsupported_events(events)
@@ -192,8 +192,8 @@ class Controller():
             case "commercial":
                 match choice:
                     case 1:
-                        events = Event.select()
-                        views.Views.show_all_data(events)
+                        contracts = Contract.select()
+                        views.Views.show_all_data(contracts)
                     case 2:
                         contracts = Contract.select().where(Contract.state != "Signé")
                         views.Views.show_unsigned_contracts(contracts)
@@ -207,8 +207,8 @@ class Controller():
             case "support":
                 match choice:
                     case 1:
-                        events = Event.select()
-                        views.Views.show_all_data(events)
+                        contracts = Contract.select()
+                        views.Views.show_all_data(contracts)
                     case 2:
                         events = Event.select().where(Event.logistic_contact == user)
                         views.Views.show_my_events(events)
@@ -255,7 +255,14 @@ class Event_Contract_Controller():
     def create_contract(user:User):
         
         clients = Client.select()
-        contract_infos = views.Views.create_contract(user, clients)
+        client = views.Views.select_client(clients)
+        if not client:
+            return
+        commercials = User.select().where(User.role == "commercial")
+        commercial = views.Views.select_commercial(commercials)
+        if not commercial:
+            return
+        contract_infos = views.Views.create_contract(user, client, commercial)
         if not contract_infos:
             return
         contract = Contract.create_contract(contract_infos)

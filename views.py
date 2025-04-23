@@ -99,6 +99,27 @@ class Views():
         except (Client.DoesNotExist, ValueError):
             print(Colors.error("Client invalide ou non trouvé."))
             return None
+        
+    @staticmethod
+    def select_commercial(commercials):
+        print(Colors.highlight("\nListe des commerciaux disponibles:"))
+        
+        if not commercials:
+            print(Colors.info("Aucun Commercial n'est disponible."))
+            return None
+            
+        for commercial in commercials:
+            print(Colors.prompt(f"ID: {commercial.id} - Nom: {commercial.name}"))
+        
+        commercial_id = input("\nSélectionnez l'ID du Commercial à mettre à jour: ")
+        
+        try:
+            selected_commercial = User.get(User.id == int(commercial_id))
+            print(Colors.highlight(f"\nCommercial sélectionné: {selected_commercial.name}"))
+            return selected_commercial
+        except (User.DoesNotExist, ValueError):
+            print(Colors.error("Commercial invalide ou non trouvé."))
+            return None
 
     @staticmethod
     def select_client_update():
@@ -120,29 +141,13 @@ class Views():
         return new_mail
 
     @staticmethod
-    def create_contract(user, clients):
+    def create_contract(user, client, commercial):
 
         if user.get_permission != Permissions.MANAGEMENT_TEAM:
             print(Colors.info("Il faut être dans l'équipe gestion pour créer un contrat."))
             return None
-        
 
         print(Colors.highlight("Veuillez renseigner les informations du contrat à créer"))
-        
-        # Afficher la liste des clients existants
-        print(Colors.highlight("\nListe des clients disponibles:"))
-        
-        
-        for client in clients:
-            print(Colors.prompt(f"ID: {client.id} - Nom: {client.name}"))
-        client_id = input("Sélectionnez l'ID du client: ")
-        
-        # Afficher la liste des commerciaux
-        print(Colors.highlight("\nListe des commerciaux disponibles:"))
-        commercials = User.select().where(User.role == "commercial")
-        for commercial in commercials:
-            print(Colors.prompt(f"ID: {commercial.id} - Nom: {commercial.name}"))
-        commercial_id = input("Sélectionnez l'ID du commercial: ")
         
         total_amount = input("Montant total: ")
         rest_amount = input("Montant restant à payer (par défaut même valeur que le montant total): ")
@@ -164,8 +169,8 @@ class Views():
         state = states.get(state_choice, "En attente")
         
         return {
-            "client": int(client_id),
-            "commercial": int(commercial_id),
+            "client": int(client.id),
+            "commercial": int(commercial.id),
             "total_amount": float(total_amount),
             "rest_amount": float(rest_amount or total_amount),
             "state": state
@@ -393,21 +398,32 @@ class Views():
                 return choice
  
     @staticmethod
-    def show_all_data(events):
+    def show_all_data(contracts):
         
         # Préparation des données pour le tableau
         table_data = []
-        for event in events:
-            table_data.append([
-                event.name, 
-                event.contract.state, 
-                event.client.name, 
-                event.contract.commercial.name, 
-                event.logistic_contact.name if event.logistic_contact else "Non assigné"
-            ])
+        for contract in contracts:
+            events = list(contract.events)
+            if events:
+                for event in events:
+                    table_data.append([
+                        contract.state,
+                        event.name, 
+                        event.client.name, 
+                        contract.commercial.name, 
+                        event.logistic_contact.name if event.logistic_contact else "Non assigné"
+                    ])
+            else:
+                table_data.append([
+                contract.state,
+                "Pas d'évènement prévu",
+                contract.client.name,  # Utiliser directement le client du contrat
+                contract.commercial.name,
+                "Non assigné"
+                ])
         
         # Définition des en-têtes
-        headers = ["Évènement", "Contrat", "Client", "Commercial", "Support"]
+        headers = ["Contrat", "Évènement" , "Client", "Commercial", "Support"]
         
         # Affichage du tableau
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
