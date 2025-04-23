@@ -178,8 +178,12 @@ class Contract(Model):
         self.save()
     
     def update_rest_amount(self, amount):
-        self.rest_amount = self.rest_amount - Decimal(str(amount))
-        self.save()   
+        if isinstance(self.rest_amount, float):
+            self.rest_amount = float(self.rest_amount) - float(amount)
+        else:
+            self.rest_amount = self.rest_amount - Decimal(str(amount))
+        self.save()
+        
 
 class Event(Model):
     contract = ForeignKeyField(Contract, backref='events')
