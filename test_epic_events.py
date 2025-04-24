@@ -7,7 +7,7 @@ from decimal import Decimal
 
 # Importer les modules à tester
 from models import User, Client, Contract, Event, Token, Security, UserRole, Permissions
-from controller import Controller, ClientController, Event_Contract_Controller, DBController
+from controller import FlowController, ClientController, Event_Contract_Controller, DBController
 from views import Views
 
 class TestModels(unittest.TestCase):
@@ -266,7 +266,7 @@ class TestFunctional(unittest.TestCase):
         }
         
         # Test de la connexion
-        user = Controller.login()
+        user = FlowController.login()
         self.assertIsNotNone(user)
         self.assertEqual(user.mail, "manager@test.com")
     
@@ -359,14 +359,14 @@ class TestFunctional(unittest.TestCase):
     @patch('os.remove')
     def test_handle_session_persistence(self, mock_remove):
         """Test la suppression du token lors de la déconnexion"""
-        Controller.handle_session_persistence(2)
+        FlowController.handle_session_persistence(2)
         mock_remove.assert_called_once()
         
         # Réinitialiser le mock
         mock_remove.reset_mock()
         
         # Tester qu'aucune suppression n'est effectuée quand l'utilisateur veut rester connecté
-        Controller.handle_session_persistence(1)
+        FlowController.handle_session_persistence(1)
         mock_remove.assert_not_called()
 
     @patch('controller.db.create_tables')
@@ -403,7 +403,7 @@ class TestFunctional(unittest.TestCase):
         }
         
         with patch.object(User, 'create_user') as mock_user_create:
-            Controller.create_account(management_user)
+            FlowController.create_account(management_user)
             
             # Vérifier que l'utilisateur est créé avec le bon rôle
             mock_user_create.assert_called_once()
