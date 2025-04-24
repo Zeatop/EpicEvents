@@ -12,18 +12,25 @@ SECRET_KEY = "clé_secrète"
 
 class Permissions(Enum):
 
+    """Définit les niveaux de permission dans l'application."""
+
     MANAGEMENT_TEAM = auto()
     LOGISTIC_TEAM = auto()
     COMMERCIAL_TEAM = auto()
 
 class UserRole (Enum):
     
+    """Définit les rôles utilisateur disponibles."""
+
     SUPPORT = "support"
     COMMERCIAL = "commercial"
     MANAGEMENT = "Management"
 
 class Security():
+    """Gère les fonctionnalités de sécurité liées aux mots de passe."""
+    
     def hash_password(password):
+        """Crée une version hashée du mot de passe fourni."""
         salt = bcrypt.gensalt()
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
         return hashed_password.decode('utf-8')
@@ -32,6 +39,9 @@ class Security():
         return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 class User(Model):
+
+    """Modèle représentant un utilisateur du CRM."""
+
     name = CharField()
     mail = CharField(unique=True)
     phone = CharField()
@@ -46,6 +56,9 @@ class User(Model):
 
     @property
     def get_permission(self):
+
+        """Renvoie les permissions associées au rôle de l'utilisateur."""
+
         match self.role:
             case UserRole.SUPPORT.value:
                 return Permissions.LOGISTIC_TEAM
@@ -56,6 +69,9 @@ class User(Model):
         
     @classmethod
     def create_user(cls, account_infos:dict):
+
+        """Crée un nouvel utilisateur avec les informations fournies."""
+
         hashed_password = Security.hash_password(account_infos["password"])
         user = cls.create(name=account_infos["name"], mail=account_infos["mail"],
                           phone=account_infos["phone"], password=hashed_password,
@@ -88,8 +104,13 @@ class Client(Model):
 
 class Token(Model):
 
+    """Gère la création et validation des tokens d'authentification."""
+
     @classmethod
     def generate_token(cls, mail):
+
+        """Génère un token JWT pour l'utilisateur identifié par email."""
+
         expiration = datetime.datetime.now() + datetime.timedelta(days=1)
         payload = {
             "mail":mail,
@@ -114,6 +135,9 @@ class Token(Model):
 
     @staticmethod
     def decode_token(token, secret_key):
+
+        """Décode un token JWT et le retourne."""
+
         try:
             decoded_payload = jwt.decode(token, secret_key, algorithms=['HS256'])
             return decoded_payload
@@ -126,7 +150,9 @@ class Token(Model):
 
     @classmethod
     def is_valid(cls, payload):
-        # Vérifier si le token existe en base et n'est pas expiré
+        
+        """Vérifie si le token est valide et non expiré."""
+
         try:
             expiration = payload['exp']
             current_timestamp = datetime.datetime.now().timestamp()
@@ -141,6 +167,9 @@ class Token(Model):
     
     @staticmethod
     def delete_local_token():
+
+        """Supprime le token stocké localement."""
+
         try:
             os.remove('.token')
             print(Colors.info("Token local supprimé."))
@@ -183,7 +212,7 @@ class Contract(Model):
         else:
             self.rest_amount = self.rest_amount - Decimal(str(amount))
         self.save()
-        
+      
 
 class Event(Model):
     contract = ForeignKeyField(Contract, backref='events')

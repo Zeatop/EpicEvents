@@ -6,8 +6,13 @@ import jwt
 DEBUG = True
 class SentryController():
 
+    """Gère l'intégration avec Sentry pour le suivi des erreurs."""
+
     @staticmethod
     def init_sentry():
+
+        """Initialise la configuration Sentry pour le monitoring des erreurs."""
+
         sentry_sdk.init(
         dsn="https://2f9cb531ca3820e0aba34c3daf1db2a0@o4509147190460416.ingest.de.sentry.io/4509147194196048",
         # Add data like request headers and IP for users,
@@ -17,6 +22,9 @@ class SentryController():
 
 class DBController():
     def db_startup():
+
+        """Initialise la base de données et crée les tables et utilisateurs par défaut."""
+
         db.connect()
         try:
             db.create_tables([User, Contract, Event, Client], safe=True)
@@ -61,7 +69,9 @@ class DBController():
         except Exception as e:
             print(Colors.error(f"Erreur lors de l'initialisation de la base de données: {e}"))
 
-class Controller():
+class FlowController():
+
+    """Contrôle le flux principal de l'application et la navigation entre fonctionnalités."""
 
     @staticmethod
     def login():
@@ -84,11 +94,11 @@ class Controller():
                 return user
             else:
                 print(Colors.error("Mot de passe incorrect \nRéessayez de vous connecter"))
-                return Controller.login()
+                return FlowController.login()
                 
         except User.DoesNotExist:
             print(Colors.error("Utilisateur non trouvé"))
-            return Controller.login()
+            return FlowController.login()
         
     @staticmethod
     def handle_session_persistence(choice):
@@ -121,7 +131,7 @@ class Controller():
         match user.role:
             case "Management":
                 if choice == 1:
-                    Controller.create_account(user)
+                    FlowController.create_account(user)
                 elif choice == 2:
                     Event_Contract_Controller.create_contract(user)
                 elif choice == 3:
@@ -129,7 +139,7 @@ class Controller():
                 elif choice == 4:
                     Event_Contract_Controller.update_event(user)
                 elif choice == 5:
-                    Controller.select_data_display(user)
+                    FlowController.select_data_display(user)
                     pass
                 elif choice == 6:
                     remind = views.Views.remind_me()
@@ -150,7 +160,7 @@ class Controller():
                 elif choice == 4:
                     Event_Contract_Controller.create_event(user)
                 elif choice == 5:
-                    Controller.select_data_display(user)
+                    FlowController.select_data_display(user)
                 elif choice == 6:
                     remind = views.Views.remind_me()
                     if int(remind) == 2:
@@ -162,7 +172,7 @@ class Controller():
 
             case "support":
                 if choice == 1:
-                    Controller.select_data_display(user)
+                    FlowController.select_data_display(user)
                     pass
                 elif choice == 2:
                     remind = views.Views.remind_me()
@@ -218,6 +228,8 @@ class Controller():
 
 class ClientController():
 
+    """Gère les opérations liées aux clients."""
+
     def create_client(user:User):
         if user.get_permission != Permissions.COMMERCIAL_TEAM:
             print(Colors.info("Il faut être dans l'équipe commerciale pour créer un client."))
@@ -251,6 +263,8 @@ class ClientController():
                 ClientController.update_client(user)
 
 class Event_Contract_Controller():
+
+    """Gère les opérations liées aux contrats et événements."""
 
     def create_contract(user:User):
         
